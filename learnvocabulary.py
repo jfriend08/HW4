@@ -14,7 +14,7 @@ from librosa.util import normalize
 import kmeans as km
 import cProfile
 
-def getData(path):
+def getData(path, clipWindow=60000):
   samples = pickle.load( open( path, "rb" ) )
   X = []
   y = []
@@ -23,7 +23,7 @@ def getData(path):
     songs = samples[genere]
     for song_idx in xrange(len(songs)):
       song = songs[song_idx]
-      song = [clip[:66058] for clip in song] #some clip has different num of signal
+      song = [clip[:clipWindow] for clip in song] #some clip has different num of signal
       X.append(song)
       y.append(genere_idx)
   print "X size/number of songs:", len(X)
@@ -42,7 +42,7 @@ def MFCC(signal, sr=22050):
   # return librosa.logamplitude(S,ref_power=np.max)
   return librosa.feature.mfcc(y=np.array(signal), sr=sr, n_mfcc=12)
 
-def learnvocabulary(X, k, method="kpp", Iter=100, transpose=True):
+def learnvocabulary(X, k, method="kpp", Iter=100, transpose=False):
   X = np.array([[MFCC(clip) for clip in song] for song in X])
   # X = [[MFCC(clip) for clip in song] for song in X]
   print "After MFCC X.shape", X.shape
@@ -77,9 +77,12 @@ def learnvocabulary(X, k, method="kpp", Iter=100, transpose=True):
   km.plotPCA_multi(X_train_flattened_norm_final, y, centroids, centroids_all, distortions)
   return centroids
 
-def getbof(X, y, centroids):
+def getbof(X, y, centroids, transpose=False):
   finalResult = []
   X = np.array([MFCC(clip) for song in X for clip in song])
+  if transpose:
+    X = np.array(map(np.transpose, X))
+    print "After transpose X.shape", X.shape
 
   y_flatten = []
   for genre in y:
@@ -110,18 +113,18 @@ def getbof(X, y, centroids):
     finalResult.append(centroidCount)
   return np.array(finalResult), np.array(y_flatten)
 
-# X1, y1 = getData("./data/data_small5.in")
+# # X1, y1 = getData("./data/data_small5.in")
 # X, y = getData("./data/data_small8II.in")
 
-# print "np.array(X1).shape", np.array(X1).shape
-# print "np.array(X).shape", np.array(X).shape
+# # print "np.array(X1).shape", np.array(X1).shape
+# # print "np.array(X).shape", np.array(X).shape
 
-# X1_train, X1_test, y1_train, y1_test = train_test_split(X1, y1, test_size=0.25, random_state=2010)
-# # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=2010)
-# print 'np.array(X1_train).shape', np.array(X1_train).shape
-# # print 'np.array(X_train).shape', np.array(X_train).shape
-# centroids = learnvocabulary(X1_train, 20, "kpp", 50, False) #X, k, method, num of Iter, transpose mfcc
-# # centroids = learnvocabulary(X_train, 20, "kpp", 50, False) #X, k, method, num of Iter, transpose mfcc
+# # X1_train, X1_test, y1_train, y1_test = train_test_split(X1, y1, test_size=0.25, random_state=2010)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=2010)
+# # print 'np.array(X1_train).shape', np.array(X1_train).shape
+# print 'np.array(X_train).shape', np.array(X_train).shape
+# # centroids = learnvocabulary(X1_train, 20, "kpp", 50, False) #X, k, method, num of Iter, transpose mfcc
+# centroids = learnvocabulary(X_train, 20, "kpp", 50, False) #X, k, method, num of Iter, transpose mfcc
 
 # '''Important Part'''
 # X, y = getData()
