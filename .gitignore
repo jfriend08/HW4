@@ -1,0 +1,11 @@
+*swp
+genres_processed/
+data.in
+update.pbs
+.DS*
+._*
+*.e*
+*.o*
+data_small_correctFormat.in
+.ipynb_checkpoints
+*_songs.in
